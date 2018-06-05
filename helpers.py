@@ -4,60 +4,6 @@ import json
 import sys
 import os
 
-def validateConfig(config, type=None):  # dict
-    """Return a type based configuration to create the gui element."""
-    validated_config = {}
-    f = os.path.dirname(os.path.realpath(__file__)) + "\\defaults.json"
-    defaults = json.loads(readFile(f))
-    if config.__class__ is str:
-        config = json.loads(readFile(config))
-
-    if type is "window":
-
-        defaults = defaults["window"]
-        try:    # size
-            validated_config["size"] = config["size"]
-        except KeyError:
-            validated_config["size"] = defaults["size"]
-        try:    # caption
-            validated_config["caption"] = config["caption"]
-        except KeyError:
-            validated_config["caption"] = defaults["caption"]
-        try:    # fps
-            validated_config["fps"] = config["fps"]
-        except KeyError:
-            validated_config["fps"] = defaults["fps"]
-        try:    # background
-            validated_config["background"] = config["background"]
-        except KeyError:
-            validated_config["background"] = defaults["background"]
-        try:    # resizable
-            validated_config["resizable"] = config["resizable"]
-        except KeyError:
-            validated_config["resizable"] = defaults["resizable"]
-
-    if type is "pane":
-
-        defaults = defaults["pane"]
-        try:    # size
-            validated_config["size"] = config["size"]
-        except KeyError:
-            validated_config["size"] = defaults["size"]
-        try:    # position
-            validated_config["position"] = config["position"]
-        except KeyError:
-            validated_config["position"] = defaults["position"]
-        try:    # background
-            validated_config["background"] = config["background"]
-        except KeyError:
-            validated_config["background"] = defaults["background"]
-        try:    # resizable
-            validated_config["resizable"] = config["resizable"]
-        except KeyError:
-            validated_config["resizable"] = defaults["resizable"]
-
-    return validated_config
-
 # directive path & file functions
 def pythonPath():
     """List all entries in sys.path"""
