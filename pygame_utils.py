@@ -54,7 +54,7 @@ class Window(object):
         self.background = self.config["background"]
         self.resizable = self.config["resizable"]
         self.fps = self.config["fps"]
-        self.__createWindow()
+        self.display = self.__createWindow()
     def __createWindow(self):
         """Create main window element."""
         if self.resizable:
