@@ -53,8 +53,9 @@ class Window(object):
         self.caption = self.config["caption"]
         self.background = self.config["background"]
         self.resizable = self.config["resizable"]
+        self.clock = pg.time.Clock()
         self.fps = self.config["fps"]
-        self.display = self.__createWindow()
+        self.screen = self.__createWindow()
     def __createWindow(self):
         """Create main window element."""
         if self.resizable:
@@ -64,3 +65,17 @@ class Window(object):
         display = pg.display.get_surface()
         display.fill(self.background)
         return display
+    def update(self):
+        """Update the window surface."""
+        pg.display.update()
+        pg.display.flip()
+        self.clock.tick(self.fps)
+    def close(self):
+        """Close the window and shut down pygame"""
+        import sys
+        pg.quit()
+        sys.exit()
+    def resize(self, size):
+        """Resizing element."""
+        self.size = size
+        self.screen = self.__createWindow()
