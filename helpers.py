@@ -66,7 +66,7 @@ def getPrivateProperties(obj):  # list
 
     return property_dict
 def isMasterClass(object, masterclass):  # bool
-    """Get master class fro object."""
+    """Get master class from object."""
     if object.__class__.__bases__[0] is masterclass:
         bool = True
     else:
