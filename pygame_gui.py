@@ -1,27 +1,31 @@
 import pygame as pg
-from .helpers import isMasterClass
+from .helpers import isMasterClass, getAnchors, convertAnchor, getPercantage
 
 defaults = {
-  "window" : {
-    "size" : (320 , 240),
-    "caption" : "new window",
-    "background" : (25 , 25 , 30),
-    "resizable" : False,
+  "window": {
+    "size": (320, 240),
+    "caption": "new window",
+    "background": (25, 25, 30),
+    "resizable": False,
     "fps": 10
   },
-  "surface" : {
-    "size" : (200 , 150),
-    "background" : (255 , 255 , 255),
-    "position" : (0 , 0),
-    "resizable" : False
+  "surface": {
+    "size": (200, 150),
+    "background": (255, 255, 255),
+    "position": (0, 0),
+    "resizable": False,
+    "dragable": True,
+    "anchors": None
   },
-  "panel" : {
-    "size" : (100 , 300),
-    "background" : (100 , 100 , 100),
-    "position" : (100 , 100),
-    "resizable" : False
+  "panel": {
+    "size": (100, 300),
+    "background": (100, 100, 100),
+    "position": (0, 0),
+    "resizable": False,
+    "dragable": False,
+    "anchors": None
   }
-  }
+}
 
 def validateGuiConfig(config, type):
     """Return a type based configuration to create the gui element."""
@@ -52,6 +56,12 @@ def validateGuiConfig(config, type):
             validated_config["resizable"] = config["resizable"]
         except KeyError:
             validated_config["resizable"] = defaults[type]["resizable"]
+    # dragable
+    if t == "surface" or t == "panel":
+        try:
+            validated_config["dragable"] = config["dragable"]
+        except KeyError:
+            validated_config["dragable"] = defaults[type]["dragable"]
     # fps
     if t == "window":
         try:
@@ -64,6 +74,12 @@ def validateGuiConfig(config, type):
             validated_config["position"] = config["position"]
         except KeyError:
             validated_config["position"] = defaults[type]["position"]
+    # anchors
+    if t == "surface" or t == "panel":
+        try:
+            validated_config["anchors"] = config["anchors"]
+        except KeyError:
+            validated_config["anchors"] = defaults[type]["anchors"]
 
     return validated_config
 
@@ -72,7 +88,9 @@ class Window(object):
     def __init__(self, config={}, type="window"):
         """Constructor."""
         self.config = validateGuiConfig(config, type)
+        self.type = type
         self.size = self.config["size"]
+        self.anchorpoints = getAnchors(self.size)
         self.caption = self.config["caption"]
         self.background = self.config["background"]
         self.resizable = self.config["resizable"]
@@ -102,16 +120,19 @@ class Window(object):
         self.screen.fill(self.background)
     def draw(self, obj, pos=None):
         """Draw onto the window."""
-        if obj.__class__ is dict:
+        elements = []
+        if isMasterClass(obj, Surface):
+            elements.append(obj)
+        elif obj.__class__ is dict:
             for each in obj:
                 if obj[each].__class__ is Surface or isMasterClass(obj[each], Surface):
-                    if not pos:
-                        pos = obj[each].position
-                    self.screen.blit(obj[each], pos)
-        elif obj.__class__ is Surface or isMasterClass(obj, Surface):
+                    elements.append(obj[each])
+        for each in elements:
             if not pos:
-                pos = obj.position
-            self.screen.blit(obj, pos)
+                position = each.position
+            else:
+                position = pos
+            self.screen.blit(each, position)
     def getEvents(self, elements={}):
         """Return a dict of window driven events."""
         for event in [pg.event.wait()] + pg.event.get():
@@ -141,7 +162,13 @@ class Window(object):
 
             # elements events
             for each in elements:
-                elements[each].getEvents(self.events)
+                elem = elements[each]
+                # update events
+                elem.getEvents(self.events)
+                # if anchor: change position on resize
+                if elem.anchors:
+                    if event.type is pg.VIDEORESIZE:
+                        elem.calcPosition()
 
         return self.events
     def close(self):
@@ -153,22 +180,35 @@ class Window(object):
         """Resizing element."""
         self.size = size
         self.screen = self.__createWindow()
+        self.anchorpoints = getAnchors(self.size)
 class Surface(pg.Surface):
     """Surface template class for gui elements."""
-    def __init__(self, config={}, type="surface"):
+    def __init__(self, config={}, type="surface", parent=None):
         """Constructor."""
         self.config = validateGuiConfig(config, type)
+        if parent:
+            self.parent = parent
+        else:
+            self.parent = pg.display.get_surface()
+        self.type = type
+        ######################################
+        print(getPercantage(self.parent.get_rect().size, self.config["size"]))
+        ######################################
         self.size = self.config["size"]
         self.width = self.size[0]
         self.height = self.size[1]
         self.position = self.config["position"]
         self.x = self.position[0]
         self.y = self.position[1]
+        self.anchors = self.config["anchors"]
+        self.anchorpoints = getAnchors(self.size)
         pg.Surface.__init__(self, self.size)
         self.rect = self.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+        self.calcPosition()
         self.resizable = self.config["resizable"]
+        self.dragable = self.config["dragable"]
         self.background = self.config["background"]
         self.fill(self.background)
         self.events = {
@@ -204,7 +244,8 @@ class Surface(pg.Surface):
         #drag and drop
         if self.events["clickedAt"]:
             cl = self.events["clickedAt"]
-            self.reposition((mx - cl[0], my - cl[1]))
+            if self.dragable:
+                self.reposition((mx - cl[0], my - cl[1]))
 
         return self.events
     def reposition(self, pos=None):
@@ -213,9 +254,16 @@ class Surface(pg.Surface):
             self.x, self.y = pos
             self.rect.x = self.x
             self.rect.y = self.y
+    def calcPosition(self):
+        """Calculate position coordinates of anchors."""
+        if self.anchors:
+            parent_anchors = getAnchors(self.parent.get_rect().size)
+            position = convertAnchor(parent_anchors, self.size, self.anchors)
+            self.reposition(position)
 class Panel(Surface):
     """Create a new gui panel"""
     def __init__(self, config={}, type="panel"):
         """Constructor."""
         super().__init__(config, type)
+        # Surface.__init__(self, config=config, type=type)
         #print(self.config)

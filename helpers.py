@@ -9,13 +9,13 @@ def pythonPath():
     """List all entries in sys.path"""
     for each in sys.path:
         print(each)
-def checkPath(path):  # bool
+def checkPath(path):# bool
     """Return True if given path exists."""
-    if os.path.isfile(path) or os.path.exists(path):   # bool
+    if os.path.isfile(path) or os.path.exists(path):# bool
         return True
     else:
         return False
-def readFile(path):  # str
+def readFile(path):# str
     """Open content from file."""
     content = ""
     if os.path.isfile(path):
@@ -24,21 +24,21 @@ def readFile(path):  # str
     return content
 
 # class related functions
-def getPublicMethodes(obj):  # list
+def getPublicMethodes(obj):# list
     """Objects public methodes."""
     method_list = []
     for each in inspect.getmembers(obj, predicate=inspect.ismethod):
         if each[0][:1] != "_":
             method_list.append(each[0])
     return method_list
-def getPrivateMethodes(obj):  # list
+def getPrivateMethodes(obj):# list
     """Objects private properies."""
     method_list = []
     for each in inspect.getmembers(obj, predicate=inspect.ismethod):
         if each[0][:1] == "_":
             method_list.append(each[0])
     return method_list
-def getBuiltinMethodes(obj):   # list
+def getBuiltinMethodes(obj):# list
     """Objects builtin methodes."""
     method_list = []
     for each in dir(obj):
@@ -47,7 +47,7 @@ def getBuiltinMethodes(obj):   # list
                 method_list.append(each)
 
     return method_list
-def getPublicProperties(obj):  # list
+def getPublicProperties(obj):# list
     """Objects public properies."""
     property_dict = {}
     for each in obj.__dict__:
@@ -55,7 +55,7 @@ def getPublicProperties(obj):  # list
             property_dict.update({each: obj.__dict__[each]})
 
     return property_dict
-def getPrivateProperties(obj):  # list
+def getPrivateProperties(obj):# list
     """Objects private properies."""
     property_dict = {}
     for each in obj.__dict__:
@@ -65,15 +65,7 @@ def getPrivateProperties(obj):  # list
             })
 
     return property_dict
-def isMasterClass(object, masterclass):  # bool
-    """Get master class from object."""
-    if object.__class__.__bases__[0] is masterclass:
-        bool = True
-    else:
-        bool = False
-
-    return bool
-def isSubClass(object, subclass):  # bool
+def isSubClass(object, subclass):# bool
     """Get sub class fro object."""
     if issubclass(type(object), subclass) is True:
         bool = True
@@ -81,9 +73,17 @@ def isSubClass(object, subclass):  # bool
         bool = False
 
     return bool
+def isMasterClass(object, masterclass):# bool
+    """Get master class from object."""
+    if object.__class__.__bases__[0] is masterclass:
+        bool = True
+    else:
+        bool = False
+
+    return bool
 
 # math operation
-def getPercantage(parent, child):  # tuple
+def getPercantage(parent, child):# tuple
     """Parent = (int, int) & child = (int, int)."""
     width = 0
     height = 0
@@ -107,8 +107,53 @@ def getPercantage(parent, child):  # tuple
         height = child[1]
 
     return (width, height)
+def getAnchors(room):# dict
+    """Return a dict of room's anchor point."""
+    anchors = {
+        "top" : 0,
+        "middle" : int(room[1] / 2),
+        "bottom" : room[1],
+        "left" : 0,
+        "center" : int(room[0] / 2),
+        "right" : room[0],
+        "topleft" : (0 , 0),
+        "topcenter" : (int(room[0] / 2) , 0),
+        "topright" : (room[0] , 0),
+        "midleft" : (0 , int(room[1] / 2)),
+        "midcenter" : (int(room[0] / 2) , int(room[1] / 2)),
+        "midright" : (room[0] , int(room[1] / 2)),
+        "bottomleft" : (0 , room[1]),
+        "bottomcenter" : (int(room[0] / 2) , room[1]),
+        "bottomright" : (room[0] , room[1])
+    }
+    return anchors
+def convertAnchor(parent , child , anchor):# tuple
+    """Calculate x and y trough parental sizing."""
+    x , y = (0 , 0)
 
-def getMachineResolution():  # tuple
+    if type(anchor[1]) is str:
+        if anchor[1] == "top":
+            y = parent["top"]
+        elif anchor[1] == "middle":
+            y = parent["middle"] - int(child[1] / 2)
+        elif anchor[1] == "bottom":
+            y = parent["bottom"] - child[1]
+        elif type(anchor[1]) is int:
+            y = anchor[1]
+    if type(anchor[0]) is str:
+        if anchor[0] == "left":
+            x = parent["left"]
+        elif anchor[0] == "center":
+            x = parent["center"] - int(child[0] / 2)
+        elif anchor[0] == "right":
+            x = parent["right"] - child[0]
+        elif type(anchor[0]) is int:
+            x = anchor[0]
+
+    return (x , y)
+
+#
+def getMachineResolution():# tuple
     """Return full screen resolution in pixels."""
     user32 = ctypes.windll.user32
     user32.SetProcessDPIAware()
