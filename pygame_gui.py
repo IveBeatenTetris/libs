@@ -15,6 +15,7 @@ defaults = {
     "position": (0, 0),
     "resizable": False,
     "dragable": True,
+    "drag-area": None,
     "anchors": None
   },
   "panel": {
@@ -23,6 +24,7 @@ defaults = {
     "position": (0, 0),
     "resizable": False,
     "dragable": False,
+    "drag-area": pg.Rect((100, 20), (0, 0)),
     "anchors": None
   }
 }
@@ -62,6 +64,12 @@ def validateGuiConfig(config, type):
             validated_config["dragable"] = config["dragable"]
         except KeyError:
             validated_config["dragable"] = defaults[type]["dragable"]
+    # drag area
+    if t == "surface" or t == "panel":
+        try:
+            validated_config["drag-area"] = config["drag-area"]
+        except KeyError:
+            validated_config["drag-area"] = defaults[type]["drag-area"]
     # fps
     if t == "window":
         try:
@@ -98,6 +106,7 @@ class Window(object):
         self.fps = self.config["fps"]
         self.screen = self.__createWindow()
         self.events = {
+            "resize": None,
             "move": None,
             "click": None,
             "mousedownleft": False
@@ -142,6 +151,9 @@ class Window(object):
             # window resized
             if event.type is pg.VIDEORESIZE:
                 self.resize(event.size)
+                self.events["resize"] = event.size
+            else:
+                self.events["resize"] = None
             # clicked
             if event.type is pg.MOUSEBUTTONDOWN:
                 # clicked left
@@ -166,9 +178,12 @@ class Window(object):
                 # update events
                 elem.getEvents(self.events)
                 # if anchor: change position on resize
-                if elem.anchors:
-                    if event.type is pg.VIDEORESIZE:
-                        elem.calcPosition()
+                if event.type is pg.VIDEORESIZE:
+                    if elem.anchors:
+                        elem.reposition(elem.calcPosition())
+                    if elem.size[0].__class__ is str or elem.size[1].__class__ is str:
+                        elem.resize(elem.size)
+                        #print(elem.width, elem.height)
 
         return self.events
     def close(self):
@@ -191,31 +206,34 @@ class Surface(pg.Surface):
         else:
             self.parent = pg.display.get_surface()
         self.type = type
-        ######################################
-        print(getPercantage(self.parent.get_rect().size, self.config["size"]))
-        ######################################
         self.size = self.config["size"]
-        self.width = self.size[0]
-        self.height = self.size[1]
+        if self.size[0].__class__ is str or self.size[1].__class__ is str:
+            s = getPercantage(self.parent.get_rect().size, self.size)
+        else:
+            s = self.size
+        self.width, self.height = s
         self.position = self.config["position"]
         self.x = self.position[0]
         self.y = self.position[1]
         self.anchors = self.config["anchors"]
-        self.anchorpoints = getAnchors(self.size)
-        pg.Surface.__init__(self, self.size)
-        self.rect = self.get_rect()
-        self.rect.x = self.x
-        self.rect.y = self.y
-        self.calcPosition()
+        self.anchorpoints = getAnchors((self.width, self.height))
+        self.background = self.config["background"]
         self.resizable = self.config["resizable"]
         self.dragable = self.config["dragable"]
-        self.background = self.config["background"]
-        self.fill(self.background)
+        self.__built()
+        self.reposition(self.calcPosition())
         self.events = {
             "hover": None,
             "click": False,
             "clickedAt": None
         }
+    def __built(self):
+        """Throw everything together."""
+        pg.Surface.__init__(self, (self.width, self.height))
+        self.rect = self.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+        self.fill(self.background)
     def getEvents(self, window_events):
         """Return a dict of events."""
         mx, my = pg.mouse.get_pos()
@@ -256,10 +274,23 @@ class Surface(pg.Surface):
             self.rect.y = self.y
     def calcPosition(self):
         """Calculate position coordinates of anchors."""
+        position = (self.width, self.height)
         if self.anchors:
             parent_anchors = getAnchors(self.parent.get_rect().size)
             position = convertAnchor(parent_anchors, self.size, self.anchors)
-            self.reposition(position)
+        else:
+            position = (self.width, self.height)
+
+        return position
+    def resize(self, size):
+        """Calculate size if percantage is given."""
+        if size[0].__class__ is str or size[1].__class__ is str:
+            s = getPercantage(self.parent.get_rect().size, size)
+        else:
+            s = size
+
+        self.width, self.height = s
+        self.__built()
 class Panel(Surface):
     """Create a new gui panel"""
     def __init__(self, config={}, type="panel"):

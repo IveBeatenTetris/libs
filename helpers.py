@@ -84,7 +84,7 @@ def isMasterClass(object, masterclass):# bool
 
 # math operation
 def getPercantage(parent, child):# tuple
-    """Parent = (int, int) & child = (int, int)."""
+    """Parent = (int, int) & child = (int/str, int/str)."""
     width = 0
     height = 0
     percentage_width = None
