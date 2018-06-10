@@ -24,7 +24,8 @@ defaults = {
     "position": (0, 0),
     "resizable": False,
     "dragable": False,
-    "drag-area": pg.Rect((100, 20), (0, 0)),
+    #"drag-area": pg.Rect((0, 0), (100, 20)),
+    "drag-area": None,
     "anchors": None
   }
 }
@@ -220,6 +221,12 @@ class Surface(pg.Surface):
         self.background = self.config["background"]
         self.resizable = self.config["resizable"]
         self.dragable = self.config["dragable"]
+        if self.config["drag-area"].__class__ is pg.Rect:
+            self.dragarea = self.config["drag-area"]
+        elif self.config["drag-area"].__class__ is tuple:
+            self.dragarea = pg.Rect(self.config["drag-area"])
+        else:
+            self.dragarea = None
         self.__built()
         self.reposition(self.calcPosition())
         self.events = {
@@ -234,21 +241,33 @@ class Surface(pg.Surface):
         self.rect.x = self.x
         self.rect.y = self.y
         self.fill(self.background)
+        # dragging bar
+        if self.dragarea is not None:
+            pg.draw.rect(self, (30, 50, 70), self.dragarea)
     def getEvents(self, window_events):
         """Return a dict of events."""
         mx, my = pg.mouse.get_pos()
 
         # hover
         collision = {"x": None, "y": None}
-        if mx >= self.rect.x and mx <= self.rect.x + self.rect.w:
-            collision["x"] = mx
-        if my >= self.rect.y and my <= self.rect.y + self.rect.h:
-            collision["y"] = my
+        if self.dragarea is not None:
+            dragx = self.rect.x + self.dragarea.x
+            dragy = self.rect.y + self.dragarea.y
+            dragw = self.dragarea.w
+            dragh = self.dragarea.h
+            if mx >= dragy and mx <= dragx + dragw:
+                collision["x"] = mx
+            if my >= dragy and my <= dragy + dragh:
+                collision["y"] = my
+        else:
+            if mx >= self.rect.x and mx <= self.rect.x + self.rect.w:
+                collision["x"] = mx
+            if my >= self.rect.y and my <= self.rect.y + self.rect.h:
+                collision["y"] = my
         if collision["x"] and collision["y"]:
             self.events["hover"] = (mx - self.x, my - self.y)
         else:
             self.events["hover"] = None
-
         # click
         if self.events["hover"]:
             if window_events["click"]:
@@ -258,7 +277,6 @@ class Surface(pg.Surface):
             else:
                 self.events["click"] = False
                 self.events["clickedAt"] = None
-
         #drag and drop
         if self.events["clickedAt"]:
             cl = self.events["clickedAt"]
