@@ -255,7 +255,7 @@ class Surface(pg.Surface):
             dragy = self.rect.y + self.dragarea.y
             dragw = self.dragarea.w
             dragh = self.dragarea.h
-            if mx >= dragy and mx <= dragx + dragw:
+            if mx >= dragx and mx <= dragx + dragw:
                 collision["x"] = mx
             if my >= dragy and my <= dragy + dragh:
                 collision["y"] = my
