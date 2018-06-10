@@ -255,19 +255,20 @@ class Surface(pg.Surface):
             dragy = self.rect.y + self.dragarea.y
             dragw = self.dragarea.w
             dragh = self.dragarea.h
-            if mx >= dragx and mx <= dragx + dragw:
-                collision["x"] = mx
-            if my >= dragy and my <= dragy + dragh:
-                collision["y"] = my
         else:
-            if mx >= self.rect.x and mx <= self.rect.x + self.rect.w:
-                collision["x"] = mx
-            if my >= self.rect.y and my <= self.rect.y + self.rect.h:
-                collision["y"] = my
+            dragx = self.rect.x
+            dragy = self.rect.y
+            dragw = self.rect.w
+            dragh = self.rect.h
+        if mx >= dragx and mx <= dragx + dragw:
+            collision["x"] = mx
+        if my >= dragy and my <= dragy + dragh:
+            collision["y"] = my
         if collision["x"] and collision["y"]:
             self.events["hover"] = (mx - self.x, my - self.y)
         else:
             self.events["hover"] = None
+
         # click
         if self.events["hover"]:
             if window_events["click"]:
@@ -277,7 +278,8 @@ class Surface(pg.Surface):
             else:
                 self.events["click"] = False
                 self.events["clickedAt"] = None
-        #drag and drop
+
+        # drag and drop
         if self.events["clickedAt"]:
             cl = self.events["clickedAt"]
             if self.dragable:

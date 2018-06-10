@@ -6,7 +6,7 @@ import os
 
 # directive path & file functions
 def pythonPath():
-    """List all entries in sys.path"""
+    """List all entries in sys.path."""
     for each in sys.path:
         print(each)
 def checkPath(path):# bool
@@ -170,7 +170,7 @@ def stop(name = ""):
     print()
     print("################## ending " + name + " ##################")
 def prettyPrint(data, sort=False, tabs=4):
-    """Pretty print dict"""
+    """Pretty print dict."""
     if data.__class__ is dict:
         print(json.dumps(data, sort_keys=sort, indent=tabs))
     else:
