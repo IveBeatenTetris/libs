@@ -1,4 +1,5 @@
 import pygame as pg
+pg.font.init()
 from .helpers import isMasterClass, getAnchors, convertAnchor, getPercantage
 
 defaults = {
@@ -27,8 +28,17 @@ defaults = {
     #"drag-area": pg.Rect((0, 0), (100, 20)),
     "drag-area": None,
     "anchors": None
-  }
-}
+  },
+  "text": {
+    "size": (100, 300),
+    "background": (100, 100, 100),
+    "position": (0, 0),
+    "resizable": False,
+    "dragable": False,
+    #"drag-area": pg.Rect((0, 0), (100, 20)),
+    "drag-area": None,
+    "anchors": None
+  }}
 
 def validateGuiConfig(config, type):
     """Return a type based configuration to create the gui element."""
@@ -201,7 +211,8 @@ class Surface(pg.Surface):
     """Surface template class for gui elements."""
     def __init__(self, config={}, type="surface", parent=None):
         """Constructor."""
-        self.config = validateGuiConfig(config, type)
+        #self.config = validateGuiConfig(config, type)
+        self.config = self.validate(config)
         if parent:
             self.parent = parent
         else:
@@ -234,6 +245,12 @@ class Surface(pg.Surface):
             "click": False,
             "clickedAt": None
         }
+    def __str__(self):
+        """Object to str."""
+        return repr(self)
+    def __repr__(self):
+        """Object representation."""
+        return '<Surface({}, {})>'.format((self.x, self.y), self.size)
     def __built(self):
         """Throw everything together."""
         pg.Surface.__init__(self, (self.width, self.height))
@@ -244,6 +261,54 @@ class Surface(pg.Surface):
         # dragging bar
         if self.dragarea is not None:
             pg.draw.rect(self, (30, 50, 70), self.dragarea)
+    #-----------------------------------------------------------#
+    def validate(self, config={}):
+        """Return a type based configuration to create the gui element."""
+        validated = {}
+
+        if self.__class__ is Surface:
+            type = "surface"
+        elif self.__class__ is Panel:
+            type = "panel"
+
+        # size
+        try:
+            validated["size"] = config["size"]
+        except KeyError:
+            validated["size"] = defaults[type]["size"]
+        # background
+        try:
+            validated["background"] = config["background"]
+        except KeyError:
+            validated["background"] = defaults[type]["background"]
+        # position
+        try:
+            validated["position"] = config["position"]
+        except KeyError:
+            validated["position"] = defaults[type]["position"]
+        # anchors
+        try:
+            validated["anchors"] = config["anchors"]
+        except KeyError:
+            validated["anchors"] = defaults[type]["anchors"]
+        # resizable
+        try:
+            validated["resizable"] = config["resizable"]
+        except KeyError:
+            validated["resizable"] = defaults[type]["resizable"]
+        # dragable
+        try:
+            validated["dragable"] = config["dragable"]
+        except KeyError:
+            validated["dragable"] = defaults[type]["dragable"]
+        # drag-area
+        try:
+            validated["drag-area"] = config["drag-area"]
+        except KeyError:
+            validated["drag-area"] = defaults[type]["drag-area"]
+
+        return validated
+    #-----------------------------------------------------------#
     def getEvents(self, window_events):
         """Return a dict of events."""
         mx, my = pg.mouse.get_pos()
@@ -312,9 +377,17 @@ class Surface(pg.Surface):
         self.width, self.height = s
         self.__built()
 class Panel(Surface):
-    """Create a new gui panel"""
+    """Create a new gui panel."""
     def __init__(self, config={}, type="panel"):
         """Constructor."""
         super().__init__(config, type)
         # Surface.__init__(self, config=config, type=type)
         #print(self.config)
+class Text(Surface):
+    """Create a new gui text."""
+    def __init__(self, config={}, type="text"):
+        """Constructor."""
+        super().__init__(config, type)
+        font = pg.font.SysFont("arial" , 12 , True , False)
+        text = font.render("Hello, World" , True , (0 , 128 , 0))
+        self.blit(text , (0 , 0))
