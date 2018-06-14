@@ -1,112 +1,69 @@
 import pygame as pg
-pg.font.init()
 from .helpers import isMasterClass, getAnchors, convertAnchor, getPercantage
+pg.font.init()
 
+# default colors
+colors = {
+    "white": (255 , 255 , 255),
+    "black": (0 , 0 , 0),
+    "red": (255 , 0 , 0),
+    "green": (0 , 255 , 0),
+    "blue": (0 , 0 , 255)
+    }
+# gui defaults
 defaults = {
-  "window": {
-    "size": (320, 240),
-    "caption": "new window",
-    "background": (25, 25, 30),
-    "resizable": False,
-    "fps": 10
-  },
-  "surface": {
-    "size": (200, 150),
-    "background": (255, 255, 255),
-    "position": (0, 0),
-    "resizable": False,
-    "dragable": True,
-    "drag-area": None,
-    "anchors": None
-  },
-  "panel": {
-    "size": (100, 300),
-    "background": (100, 100, 100),
-    "position": (0, 0),
-    "resizable": False,
-    "dragable": False,
-    #"drag-area": pg.Rect((0, 0), (100, 20)),
-    "drag-area": None,
-    "anchors": None
-  },
-  "text": {
-    "size": (100, 300),
-    "background": (100, 100, 100),
-    "position": (0, 0),
-    "resizable": False,
-    "dragable": False,
-    #"drag-area": pg.Rect((0, 0), (100, 20)),
-    "drag-area": None,
-    "anchors": None
-  }}
+    "all": {
+        "position": (0, 0),
+        "size": (0, 0)},
+    "window": {
+        "caption": "new window",
+        "size": (320, 240),
+        "background": (25, 25, 30),
+        "resizable": False,
+        "fps": 10},
+    "surface": {
+        "caption": None,
+        "size": (200, 150),
+        "background": (255, 255, 255),
+        "position": (0, 0),
+        "resizable": False,
+        "dragable": True,
+        "drag-area": None,
+        "anchors": None,
+        "text": None},
+    "panel": {
+        "caption": None,
+        "size": (100, 300),
+        "background": (100, 100, 100),
+        "position": (0, 0),
+        "resizable": False,
+        "dragable": False,
+        #"drag-area": pg.Rect((0, 0), (100, 20)),
+        "drag-area": None,
+        "anchors": None,
+        "text": None},
+    "text": {
+        "caption": None,
+        "size": (0, 0),
+        "background": None,
+        "position": (0, 0),
+        "resizable": False,
+        "dragable": False,
+        "drag-area": None,
+        "anchors": None,
+        "text": "New Text",
 
-def validateGuiConfig(config, type):
-    """Return a type based configuration to create the gui element."""
-    t = type
-    validated_config = {}
-
-    # size
-    if t == "window" or t == "surface" or t == "panel":
-        try:
-            validated_config["size"] = config["size"]
-        except KeyError:
-            validated_config["size"] = defaults[type]["size"]
-    # caption
-    if t == "window":
-        try:
-            validated_config["caption"] = config["caption"]
-        except KeyError:
-            validated_config["caption"] = defaults[type]["caption"]
-    # background
-    if t == "window" or t == "surface" or t == "panel":
-        try:
-            validated_config["background"] = config["background"]
-        except KeyError:
-            validated_config["background"] = defaults[type]["background"]
-    # resizable
-    if t == "window" or t == "surface" or t == "panel":
-        try:
-            validated_config["resizable"] = config["resizable"]
-        except KeyError:
-            validated_config["resizable"] = defaults[type]["resizable"]
-    # dragable
-    if t == "surface" or t == "panel":
-        try:
-            validated_config["dragable"] = config["dragable"]
-        except KeyError:
-            validated_config["dragable"] = defaults[type]["dragable"]
-    # drag area
-    if t == "surface" or t == "panel":
-        try:
-            validated_config["drag-area"] = config["drag-area"]
-        except KeyError:
-            validated_config["drag-area"] = defaults[type]["drag-area"]
-    # fps
-    if t == "window":
-        try:
-            validated_config["fps"] = config["fps"]
-        except KeyError:
-            validated_config["fps"] = defaults[type]["fps"]
-    # position
-    if t == "surface" or t == "panel":
-        try:
-            validated_config["position"] = config["position"]
-        except KeyError:
-            validated_config["position"] = defaults[type]["position"]
-    # anchors
-    if t == "surface" or t == "panel":
-        try:
-            validated_config["anchors"] = config["anchors"]
-        except KeyError:
-            validated_config["anchors"] = defaults[type]["anchors"]
-
-    return validated_config
+        "font": "arial",
+        "font-color": colors["black"],
+        "font-size": 16}
+    }
 
 class Window(object):
     """pygame window surface in a wrapper."""
     def __init__(self, config={}, type="window"):
         """Constructor."""
-        self.config = validateGuiConfig(config, type)
+        #self.config = validateGuiConfig(config, type)
+        self.config = self.validate(config)
         self.type = type
         self.size = self.config["size"]
         self.anchorpoints = getAnchors(self.size)
@@ -132,6 +89,37 @@ class Window(object):
         display = pg.display.get_surface()
         display.fill(self.background)
         return display
+    def validate(self, config={}):
+        """Return a type based configuration to create the gui element."""
+        validated = {}
+
+        # size
+        try:
+            validated["size"] = config["size"]
+        except KeyError:
+            validated["size"] = defaults["window"]["size"]
+        # caption
+        try:
+            validated["caption"] = config["caption"]
+        except KeyError:
+            validated["caption"] = defaults["window"]["caption"]
+        # background
+        try:
+            validated["background"] = config["background"]
+        except KeyError:
+            validated["background"] = defaults["window"]["background"]
+        # resizable
+        try:
+            validated["resizable"] = config["resizable"]
+        except KeyError:
+            validated["resizable"] = defaults["window"]["resizable"]
+        # fps
+        try:
+            validated["fps"] = config["fps"]
+        except KeyError:
+            validated["fps"] = defaults["window"]["fps"]
+
+        return validated
     def update(self):
         """Update the window surface."""
         pg.display.update()
@@ -218,6 +206,7 @@ class Surface(pg.Surface):
         else:
             self.parent = pg.display.get_surface()
         self.type = type
+        self.caption = self.config["caption"]
         self.size = self.config["size"]
         if self.size[0].__class__ is str or self.size[1].__class__ is str:
             s = getPercantage(self.parent.get_rect().size, self.size)
@@ -232,12 +221,17 @@ class Surface(pg.Surface):
         self.background = self.config["background"]
         self.resizable = self.config["resizable"]
         self.dragable = self.config["dragable"]
-        if self.config["drag-area"].__class__ is pg.Rect:
-            self.dragarea = self.config["drag-area"]
-        elif self.config["drag-area"].__class__ is tuple:
-            self.dragarea = pg.Rect(self.config["drag-area"])
+
+        if "drag-area" in self.config:
+            if self.config["drag-area"].__class__ is pg.Rect:
+                self.dragarea = self.config["drag-area"]
+            elif self.config["drag-area"].__class__ is tuple:
+                self.dragarea = pg.Rect(self.config["drag-area"])
+            else:
+                self.dragarea = None
         else:
             self.dragarea = None
+
         self.__built()
         self.reposition(self.calcPosition())
         self.events = {
@@ -253,15 +247,22 @@ class Surface(pg.Surface):
         return '<Surface({}, {})>'.format((self.x, self.y), self.size)
     def __built(self):
         """Throw everything together."""
-        pg.Surface.__init__(self, (self.width, self.height))
+        if self.background is None:
+            pg.Surface.__init__(self, (self.width, self.height), pg.SRCALPHA)
+        else:
+            pg.Surface.__init__(self, (self.width, self.height))
         self.rect = self.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
-        self.fill(self.background)
+        # background
+        self.__createBackground()
         # dragging bar
         if self.dragarea is not None:
             pg.draw.rect(self, (30, 50, 70), self.dragarea)
-    #-----------------------------------------------------------#
+    def __createBackground(self):
+        if self.background is not None:
+            if self.background.__class__ is tuple:
+                self.fill(self.background)
     def validate(self, config={}):
         """Return a type based configuration to create the gui element."""
         validated = {}
@@ -270,7 +271,14 @@ class Surface(pg.Surface):
             type = "surface"
         elif self.__class__ is Panel:
             type = "panel"
+        elif self.__class__ is Text:
+            type = "text"
 
+        # caption
+        try:
+            validated["caption"] = config["caption"]
+        except KeyError:
+            validated["caption"] = defaults[type]["caption"]
         # size
         try:
             validated["size"] = config["size"]
@@ -306,9 +314,13 @@ class Surface(pg.Surface):
             validated["drag-area"] = config["drag-area"]
         except KeyError:
             validated["drag-area"] = defaults[type]["drag-area"]
+        # text
+        try:
+            validated["text"] = config["text"]
+        except KeyError:
+            validated["text"] = defaults[type]["text"]
 
         return validated
-    #-----------------------------------------------------------#
     def getEvents(self, window_events):
         """Return a dict of events."""
         mx, my = pg.mouse.get_pos()
@@ -334,6 +346,7 @@ class Surface(pg.Surface):
         else:
             self.events["hover"] = None
 
+        # //TODO dragging still works from outside of the surface to the inside
         # click
         if self.events["hover"]:
             if window_events["click"]:
@@ -387,7 +400,13 @@ class Text(Surface):
     """Create a new gui text."""
     def __init__(self, config={}, type="text"):
         """Constructor."""
+        d = defaults["text"]
+        font = pg.font.SysFont(d["font"], 12, True, False)
+        text = font.render(d["text"], True, colors["white"])
+
+        config["size"] = text.get_rect().size
+        #config["background"] = colors["white"]
+        #config["dragable"] = True
+
         super().__init__(config, type)
-        font = pg.font.SysFont("arial" , 12 , True , False)
-        text = font.render("Hello, World" , True , (0 , 128 , 0))
-        self.blit(text , (0 , 0))
+        self.blit(text, (0, 0))
