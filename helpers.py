@@ -153,6 +153,15 @@ def convertAnchor(parent , child , anchor):# tuple
     return (x , y)
 
 #
+def validateDict(config, defaults):# dict
+    """Validate a dictionary by given defaults. defaults can be dict, list or
+    tuple."""
+    if defaults.__class__ is dict:
+        pass
+    elif defailts.__class__ is tuple:
+        pass
+    elif defailts.__class__ is list:
+        pass
 def getMachineResolution():# tuple
     """Return full screen resolution in pixels."""
     user32 = ctypes.windll.user32

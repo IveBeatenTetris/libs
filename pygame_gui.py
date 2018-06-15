@@ -1,5 +1,10 @@
 import pygame as pg
-from .helpers import isMasterClass, getAnchors, convertAnchor, getPercantage
+from .helpers import(
+    isMasterClass,
+    getAnchors,
+    convertAnchor,
+    getPercantage,
+    validateDict)
 pg.font.init()
 
 # default colors
@@ -15,13 +20,18 @@ defaults = {
     "all": {
         "position": (0, 0),
         "size": (0, 0),
-        "font": "arial"},
+        "text": "My Text",
+        "font": "arial",
+        "font-size": 16,
+        "font-color": colors["black"]
+        },
     "window": {
         "caption": "new window",
         "size": (320, 240),
         "background": (25, 25, 30),
         "resizable": False,
-        "fps": 10},
+        "fps": 10
+        },
     "surface": {
         "caption": None,
         "size": (200, 150),
@@ -31,7 +41,8 @@ defaults = {
         "dragable": True,
         "drag-area": None,
         "anchors": None,
-        "text": None},
+        "text": None
+        },
     "panel": {
         "caption": None,
         "size": (100, 300),
@@ -42,7 +53,8 @@ defaults = {
         #"drag-area": pg.Rect((0, 0), (100, 20)),
         "drag-area": None,
         "anchors": None,
-        "text": None},
+        "text": None
+        },
     "text": {
         "caption": None,
         "size": (0, 0),
@@ -52,11 +64,18 @@ defaults = {
         "dragable": False,
         "drag-area": None,
         "anchors": None,
-        "text": "New Text",
 
+        "text": "New Text",
         "font": "arial",
         "font-color": colors["black"],
-        "font-size": 16}
+        "font-size": 16
+        },
+    "simple-text": {
+        "text": "New Text",
+        "font": "arial",
+        "font-color": colors["black"],
+        "font-size": 16
+        }
     }
 
 class Window(object):
@@ -222,7 +241,6 @@ class Surface(pg.Surface):
         self.background = self.config["background"]
         self.resizable = self.config["resizable"]
         self.dragable = self.config["dragable"]
-        self.text = self.config["text"]
 
         if "drag-area" in self.config:
             if self.config["drag-area"].__class__ is pg.Rect:
@@ -263,12 +281,13 @@ class Surface(pg.Surface):
             pg.draw.rect(self, (30, 50, 70), self.dragarea)
         # caption
         if self.caption:
-            c = Text({
-                "text": "MyTitle",
-                "anchors": ("center", 4)
-                },
-                parent=self)
-            self.blit(c, (c.x, c.y))
+            cfg = {}
+            cfg["text"] = self.caption
+            cfg["anchors"] = ("center", 4)
+            #c = Text(cfg, parent=self)
+            c = SimpleText(cfg, parent=self)
+            #self.blit(c, (c.x, c.y))
+            #self.blit(c, (0, 0))
     def __createBackground(self):
         if self.background is not None:
             if self.background.__class__ is tuple:
@@ -324,11 +343,6 @@ class Surface(pg.Surface):
             validated["drag-area"] = config["drag-area"]
         except KeyError:
             validated["drag-area"] = defaults[type]["drag-area"]
-        # text
-        try:
-            validated["text"] = config["text"]
-        except KeyError:
-            validated["text"] = defaults[type]["text"]
 
         return validated
     def getEvents(self, window_events):
@@ -410,10 +424,16 @@ class Text(Surface):
     """Create a new gui text."""
     def __init__(self, config={}, type="text", parent=None):
         """Constructor."""
+        # text
         try:
             text = config["text"]
         except KeyError:
             text = defaults["text"]["text"]
+        # font-size
+        try:
+            font_size = config["font-size"]
+        except KeyError:
+            font_size = defaults["text"]["font-size"]
         font = pg.font.SysFont("arial", 12, True, False)
         text = font.render(text, True, colors["white"])
 
@@ -423,3 +443,21 @@ class Text(Surface):
 
         super().__init__(config, type, parent)
         self.blit(text, (0, 0))
+class SimpleText(pg.Surface):
+    """Create a new gui text."""
+    def __init__(self, config={}, parent=None):
+        """Constructor."""
+        #self.config = self.validate(config)
+        validateDict(config, defaults["simple-text"])
+    def validate(self, config={}):
+        """Return a type based configuration to create the gui element."""
+        validated = {}
+
+        properties = ["text", "font", "font-size", "font-color"]
+        for each in properties:
+            try:
+                validated[each] = config[each]
+            except KeyError:
+                validated[each] = defaults["all"][each]
+
+        return validated
