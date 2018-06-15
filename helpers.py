@@ -138,8 +138,8 @@ def convertAnchor(parent , child , anchor):# tuple
             y = parent["middle"] - int(child[1] / 2)
         elif anchor[1] == "bottom":
             y = parent["bottom"] - child[1]
-        elif type(anchor[1]) is int:
-            y = anchor[1]
+    elif type(anchor[1]) is int:
+        y = anchor[1]
     if type(anchor[0]) is str:
         if anchor[0] == "left":
             x = parent["left"]
@@ -147,8 +147,8 @@ def convertAnchor(parent , child , anchor):# tuple
             x = parent["center"] - int(child[0] / 2)
         elif anchor[0] == "right":
             x = parent["right"] - child[0]
-        elif type(anchor[0]) is int:
-            x = anchor[0]
+    elif type(anchor[0]) is int:
+        x = anchor[0]
 
     return (x , y)
 

@@ -14,7 +14,8 @@ colors = {
 defaults = {
     "all": {
         "position": (0, 0),
-        "size": (0, 0)},
+        "size": (0, 0),
+        "font": "arial"},
     "window": {
         "caption": "new window",
         "size": (320, 240),
@@ -221,6 +222,7 @@ class Surface(pg.Surface):
         self.background = self.config["background"]
         self.resizable = self.config["resizable"]
         self.dragable = self.config["dragable"]
+        self.text = self.config["text"]
 
         if "drag-area" in self.config:
             if self.config["drag-area"].__class__ is pg.Rect:
@@ -257,8 +259,16 @@ class Surface(pg.Surface):
         # background
         self.__createBackground()
         # dragging bar
-        if self.dragarea is not None:
+        if self.dragarea:
             pg.draw.rect(self, (30, 50, 70), self.dragarea)
+        # caption
+        if self.caption:
+            c = Text({
+                "text": "MyTitle",
+                "anchors": ("center", 4)
+                },
+                parent=self)
+            self.blit(c, (c.x, c.y))
     def __createBackground(self):
         if self.background is not None:
             if self.background.__class__ is tuple:
@@ -398,15 +408,18 @@ class Panel(Surface):
         #print(self.config)
 class Text(Surface):
     """Create a new gui text."""
-    def __init__(self, config={}, type="text"):
+    def __init__(self, config={}, type="text", parent=None):
         """Constructor."""
-        d = defaults["text"]
-        font = pg.font.SysFont(d["font"], 12, True, False)
-        text = font.render(d["text"], True, colors["white"])
+        try:
+            text = config["text"]
+        except KeyError:
+            text = defaults["text"]["text"]
+        font = pg.font.SysFont("arial", 12, True, False)
+        text = font.render(text, True, colors["white"])
 
         config["size"] = text.get_rect().size
         #config["background"] = colors["white"]
         #config["dragable"] = True
 
-        super().__init__(config, type)
+        super().__init__(config, type, parent)
         self.blit(text, (0, 0))
