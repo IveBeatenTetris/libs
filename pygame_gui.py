@@ -74,7 +74,8 @@ defaults = {
         "text": "New Text",
         "font": "arial",
         "font-color": colors["black"],
-        "font-size": 16
+        "font-size": 16,
+        "background": None
         }
     }
 
@@ -149,12 +150,14 @@ class Window(object):
     def draw(self, obj, pos=None):
         """Draw onto the window."""
         elements = []
+
         if isMasterClass(obj, Surface):
             elements.append(obj)
         elif obj.__class__ is dict:
             for each in obj:
                 if obj[each].__class__ is Surface or isMasterClass(obj[each], Surface):
                     elements.append(obj[each])
+
         for each in elements:
             if not pos:
                 position = each.position
@@ -286,7 +289,7 @@ class Surface(pg.Surface):
             cfg["anchors"] = ("center", 4)
             #c = Text(cfg, parent=self)
             c = SimpleText(cfg, parent=self)
-            #self.blit(c, (c.x, c.y))
+            self.blit(c, (0, 0))
             #self.blit(c, (0, 0))
     def __createBackground(self):
         if self.background is not None:
@@ -447,17 +450,18 @@ class SimpleText(pg.Surface):
     """Create a new gui text."""
     def __init__(self, config={}, parent=None):
         """Constructor."""
-        #self.config = self.validate(config)
-        validateDict(config, defaults["simple-text"])
-    def validate(self, config={}):
-        """Return a type based configuration to create the gui element."""
-        validated = {}
+        self.config = validateDict(config, defaults["simple-text"])
+        self.text = self.config["text"]
+        self.font = self.config["font"]
+        self.fontSize = self.config["font-size"]
+        self.fontColor = self.config["font-color"]
+        self.background = self.config["background"]
 
-        properties = ["text", "font", "font-size", "font-color"]
-        for each in properties:
-            try:
-                validated[each] = config[each]
-            except KeyError:
-                validated[each] = defaults["all"][each]
+        font = pg.font.SysFont(self.font, self.fontSize, True, False)
+        text = font.render(self.text, True, self.fontColor)
 
-        return validated
+        if self.background is None:
+            pg.Surface.__init__(self, text.get_rect().size, pg.SRCALPHA)
+        else:
+            pg.Surface.__init__(self, (0, 0))
+        self.blit(text, (0, 0))
