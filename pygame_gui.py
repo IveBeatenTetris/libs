@@ -43,6 +43,20 @@ defaults = {
         "anchors": None,
         "text": None
         },
+    "grid": {
+        "caption": None,
+        "size": ("100%", "100%"),
+        "position": (0, 0),
+        "background": None,
+        "anchors": None,
+        "resizable": False,
+        "drag-area": None,
+        "dragable": False,
+
+        "cells": (10, 10),
+        "line-color": (100, 148, 237),
+        "line-weight": 1
+        },
     "panel": {
         "caption": None,
         "size": (100, 300),
@@ -222,8 +236,15 @@ class Surface(pg.Surface):
     """Surface template class for gui elements."""
     def __init__(self, config={}, type="surface", parent=None):
         """Constructor."""
-        #self.config = validateGuiConfig(config, type)
-        self.config = self.validate(config)
+        if self.__class__ is Surface:
+            default = defaults["surface"]
+        elif self.__class__ is Panel:
+            default = defaults["panel"]
+        elif self.__class__ is Text:
+            default = defaults["text"]
+        elif self.__class__ is Grid:
+            default = defaults["grid"]
+        self.config = validateDict(config, default)
         if parent:
             self.parent = parent
         else:
@@ -244,7 +265,6 @@ class Surface(pg.Surface):
         self.background = self.config["background"]
         self.resizable = self.config["resizable"]
         self.dragable = self.config["dragable"]
-
         if "drag-area" in self.config:
             if self.config["drag-area"].__class__ is pg.Rect:
                 self.dragarea = self.config["drag-area"]
@@ -286,68 +306,17 @@ class Surface(pg.Surface):
         if self.caption:
             cfg = {}
             cfg["text"] = self.caption
+            cfg["font-color"] = colors["white"]
+            cfg["font-size"] = 14
             cfg["anchors"] = ("center", 4)
-            #c = Text(cfg, parent=self)
-            c = SimpleText(cfg, parent=self)
-            self.blit(c, (0, 0))
+            c = Text(cfg, parent=self)
+            #c = SimpleText(cfg, parent=self)
+            self.blit(c, (c.x, c.y))
             #self.blit(c, (0, 0))
     def __createBackground(self):
         if self.background is not None:
             if self.background.__class__ is tuple:
                 self.fill(self.background)
-    def validate(self, config={}):
-        """Return a type based configuration to create the gui element."""
-        validated = {}
-
-        if self.__class__ is Surface:
-            type = "surface"
-        elif self.__class__ is Panel:
-            type = "panel"
-        elif self.__class__ is Text:
-            type = "text"
-
-        # caption
-        try:
-            validated["caption"] = config["caption"]
-        except KeyError:
-            validated["caption"] = defaults[type]["caption"]
-        # size
-        try:
-            validated["size"] = config["size"]
-        except KeyError:
-            validated["size"] = defaults[type]["size"]
-        # background
-        try:
-            validated["background"] = config["background"]
-        except KeyError:
-            validated["background"] = defaults[type]["background"]
-        # position
-        try:
-            validated["position"] = config["position"]
-        except KeyError:
-            validated["position"] = defaults[type]["position"]
-        # anchors
-        try:
-            validated["anchors"] = config["anchors"]
-        except KeyError:
-            validated["anchors"] = defaults[type]["anchors"]
-        # resizable
-        try:
-            validated["resizable"] = config["resizable"]
-        except KeyError:
-            validated["resizable"] = defaults[type]["resizable"]
-        # dragable
-        try:
-            validated["dragable"] = config["dragable"]
-        except KeyError:
-            validated["dragable"] = defaults[type]["dragable"]
-        # drag-area
-        try:
-            validated["drag-area"] = config["drag-area"]
-        except KeyError:
-            validated["drag-area"] = defaults[type]["drag-area"]
-
-        return validated
     def getEvents(self, window_events):
         """Return a dict of events."""
         mx, my = pg.mouse.get_pos()
@@ -416,6 +385,14 @@ class Surface(pg.Surface):
 
         self.width, self.height = s
         self.__built()
+class Grid(Surface):
+    """Surface template class for gui elements."""
+    def __init__(self, config={}, type="grid", parent=None):
+        """Constructor."""
+        super().__init__(config, type)
+        self.fill(self.background)
+        print(self.position)
+        print((self.width, self.height))
 class Panel(Surface):
     """Create a new gui panel."""
     def __init__(self, config={}, type="panel"):
