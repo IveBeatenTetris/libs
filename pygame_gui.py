@@ -277,6 +277,7 @@ class Surface(pg.Surface):
 
         self.__built()
         self.reposition(self.calcPosition())
+
         self.events = {
             "hover": None,
             "click": False,
@@ -313,10 +314,15 @@ class Surface(pg.Surface):
             #c = SimpleText(cfg, parent=self)
             self.blit(c, (c.x, c.y))
             #self.blit(c, (0, 0))
+
+        self.update()
     def __createBackground(self):
         if self.background is not None:
             if self.background.__class__ is tuple:
                 self.fill(self.background)
+    def update(self):
+        """Update method for overwriting purpose."""
+        pass
     def getEvents(self, window_events):
         """Return a dict of events."""
         mx, my = pg.mouse.get_pos()
@@ -368,12 +374,12 @@ class Surface(pg.Surface):
             self.rect.y = self.y
     def calcPosition(self):
         """Calculate position coordinates of anchors."""
-        position = (self.width, self.height)
+        #position = (self.width, self.height)
         if self.anchors:
             parent_anchors = getAnchors(self.parent.get_rect().size)
             position = convertAnchor(parent_anchors, self.size, self.anchors)
         else:
-            position = (self.width, self.height)
+            position = (self.x, self.y)
 
         return position
     def resize(self, size):
@@ -390,9 +396,16 @@ class Grid(Surface):
     def __init__(self, config={}, type="grid", parent=None):
         """Constructor."""
         super().__init__(config, type)
-        self.fill(self.background)
-        print(self.position)
-        print((self.width, self.height))
+    def update(self):
+        """Overwrite the Surface's update method."""
+        # create the lines
+        pg.draw.line(
+            self,
+            self.config["line-color"],
+            (10, 10),
+            (100, 100),
+            self.config["line-weight"]
+            )
 class Panel(Surface):
     """Create a new gui panel."""
     def __init__(self, config={}, type="panel"):
