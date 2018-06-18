@@ -173,6 +173,7 @@ class Window(object):
                     elements.append(obj[each])
 
         for each in elements:
+            #each.update()# needed to pre-draw surfaces
             if not pos:
                 position = each.position
             else:
@@ -220,6 +221,7 @@ class Window(object):
                     if elem.size[0].__class__ is str or elem.size[1].__class__ is str:
                         elem.resize(elem.size)
                         #print(elem.width, elem.height)
+                    elem.update()
 
         return self.events
     def close(self):
@@ -315,7 +317,7 @@ class Surface(pg.Surface):
             self.blit(c, (c.x, c.y))
             #self.blit(c, (0, 0))
 
-        self.update()
+        #self.update()
     def __createBackground(self):
         if self.background is not None:
             if self.background.__class__ is tuple:
@@ -396,29 +398,44 @@ class Grid(Surface):
     def __init__(self, config={}, type="grid", parent=None):
         """Constructor."""
         super().__init__(config, type)
+        self.grid = self.__createGrid()
+    def __createGrid(self):
+        """Create a grid, draw it to a surface and return it."""
+        size = self.parent.get_rect().size
+        surface = pg.Surface(size, pg.SRCALPHA)
+        surface = self.drawGrid(surface)
+
+        return surface
     def update(self):
         """Overwrite the Surface's update method."""
         # create the lines
-        self.drawLines()
-    def drawLines(self):
-        """Draw lines in a grid."""
+        self.grid = self.__createGrid()
+        self.blit(self.grid , self.parent.get_rect().topleft)
+    def drawGrid(self, surface):
+        """Draw lines in a grid to the given surface. Then return it."""
         color = self.config["line-color"]
         weight = self.config["line-weight"]
         cells = self.config["cells"]
+        parent = self.parent.get_rect()
         size = self.rect.size
         left = int(size[0] / cells[0])
         top = int(size[1] / cells[1])
-        start = (0, 0)
-        end = (0, 0)
-
-        for i in range(cells[0]):
-            pg.draw.line(self, color, start, end, weight)
-            start = (start[0] + left, start[1])
-            end = (end[0] + left, self.parent.get_rect().height)
 
         # drawing
-        # pg.draw.line(self, color, start, end, weight)
-        # pg.draw.line(self, color, start, end, weight)
+        start = (0, 0)
+        end = (0, parent.height)
+        for i in range(cells[0]):
+            pg.draw.line(surface, color, start, end, weight)
+            start = (start[0] + left, start[1])
+            end = (end[0] + left, end[1])
+        start = (0, 0)
+        end = (parent.width, 0)
+        for i in range(cells[0]):
+            pg.draw.line(surface, color, start, end, weight)
+            start = (start[0], start[1] + top)
+            end = (end[0], end[1] + top)
+
+        return surface
 class Panel(Surface):
     """Create a new gui panel."""
     def __init__(self, config={}, type="panel"):
