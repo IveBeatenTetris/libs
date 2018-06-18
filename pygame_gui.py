@@ -55,7 +55,7 @@ defaults = {
 
         "cells": (10, 10),
         "line-color": (100, 148, 237),
-        "line-weight": 1
+        "line-weight": 1,
         },
     "panel": {
         "caption": None,
@@ -399,13 +399,26 @@ class Grid(Surface):
     def update(self):
         """Overwrite the Surface's update method."""
         # create the lines
-        pg.draw.line(
-            self,
-            self.config["line-color"],
-            (10, 10),
-            (100, 100),
-            self.config["line-weight"]
-            )
+        self.drawLines()
+    def drawLines(self):
+        """Draw lines in a grid."""
+        color = self.config["line-color"]
+        weight = self.config["line-weight"]
+        cells = self.config["cells"]
+        size = self.rect.size
+        left = int(size[0] / cells[0])
+        top = int(size[1] / cells[1])
+        start = (0, 0)
+        end = (0, 0)
+
+        for i in range(cells[0]):
+            pg.draw.line(self, color, start, end, weight)
+            start = (start[0] + left, start[1])
+            end = (end[0] + left, self.parent.get_rect().height)
+
+        # drawing
+        # pg.draw.line(self, color, start, end, weight)
+        # pg.draw.line(self, color, start, end, weight)
 class Panel(Surface):
     """Create a new gui panel."""
     def __init__(self, config={}, type="panel"):
