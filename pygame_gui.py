@@ -97,17 +97,28 @@ class Window(object):
     """pygame window surface in a wrapper."""
     def __init__(self, config={}, type="window"):
         """Constructor."""
-        #self.config = validateGuiConfig(config, type)
-        self.config = self.validate(config)
+        # validate the dict that has been declared self.config
+        self.config = validateDict(config, defaults["window"])
+        # give it a non-namespace type for you
         self.type = type
+        # size of the window. can be tuple of int or strings
         self.size = self.config["size"]
+        # anchor poins are positional coordinates to lock elements in it
         self.anchorpoints = getAnchors(self.size)
+        # the title for the window
         self.caption = self.config["caption"]
+        # TODO background is still only a color. images have to be implated
+        # window's background color in a tuple (int, int, int)
         self.background = self.config["background"]
+        # True or False
         self.resizable = self.config["resizable"]
+        # pygame clock to manage ticks
         self.clock = pg.time.Clock()
+        # each fps is a tick that calls pygame's update function
         self.fps = self.config["fps"]
+        # create the pygame surface for window as a property
         self.screen = self.__createWindow()
+        # predefined events. they will be updated with each window check
         self.events = {
             "resize": None,
             "move": None,
@@ -116,45 +127,18 @@ class Window(object):
             }
     def __createWindow(self):
         """Create main window element."""
+        # initialiaze thw pygame window object
         pg.init()
+        # decide if either resizable or not
         if self.resizable:
             pg.display.set_mode(self.size, pg.RESIZABLE)
         else:
             pg.display.set_mode(self.size)
+        # fill it with background-color
         display = pg.display.get_surface()
         display.fill(self.background)
+
         return display
-    def validate(self, config={}):
-        """Return a type based configuration to create the gui element."""
-        validated = {}
-
-        # size
-        try:
-            validated["size"] = config["size"]
-        except KeyError:
-            validated["size"] = defaults["window"]["size"]
-        # caption
-        try:
-            validated["caption"] = config["caption"]
-        except KeyError:
-            validated["caption"] = defaults["window"]["caption"]
-        # background
-        try:
-            validated["background"] = config["background"]
-        except KeyError:
-            validated["background"] = defaults["window"]["background"]
-        # resizable
-        try:
-            validated["resizable"] = config["resizable"]
-        except KeyError:
-            validated["resizable"] = defaults["window"]["resizable"]
-        # fps
-        try:
-            validated["fps"] = config["fps"]
-        except KeyError:
-            validated["fps"] = defaults["window"]["fps"]
-
-        return validated
     def update(self):
         """Update the window surface."""
         pg.display.update()
@@ -398,7 +382,6 @@ class Grid(Surface):
     def __init__(self, config={}, type="grid", parent=None):
         """Constructor."""
         super().__init__(config, type)
-        self.grid = self.__createGrid()
     def __createGrid(self):
         """Create a grid, draw it to a surface and return it."""
         size = self.parent.get_rect().size
