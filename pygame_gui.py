@@ -101,13 +101,14 @@ class Window(object):
         self.config = validateDict(config, defaults["window"])
         # give it a non-namespace type for you
         self.type = type
+        # TODO percentage size still has to be implemented
         # size of the window. can be tuple of int or strings
         self.size = self.config["size"]
         # anchor poins are positional coordinates to lock elements in it
         self.anchorpoints = getAnchors(self.size)
         # the title for the window
         self.caption = self.config["caption"]
-        # TODO background is still only a color. images have to be implated
+        # TODO background is still only a color. images have to be implemented
         # window's background color in a tuple (int, int, int)
         self.background = self.config["background"]
         # True or False
@@ -120,16 +121,17 @@ class Window(object):
         self.screen = self.__createWindow()
         # predefined events. they will be updated with each window check
         self.events = {
-            "resize": None,
-            "move": None,
-            "click": None,
-            "mousedownleft": False
+            "resize": None,# tuple / none
+            "move": None,# tuple / none
+            "click": None,# tuple / none
+            "mousedownleft": False# bool
             }
-    def __createWindow(self):
-        """Create main window element."""
+    def __createWindow(self):# pygame display
+        """Create main window element and return it. background is going to be
+        filled as well."""
         # initialiaze thw pygame window object
         pg.init()
-        # decide if either resizable or not
+        # resizability
         if self.resizable:
             pg.display.set_mode(self.size, pg.RESIZABLE)
         else:
@@ -137,81 +139,128 @@ class Window(object):
         # fill it with background-color
         display = pg.display.get_surface()
         display.fill(self.background)
-
+        # return the new created pygame display object
         return display
     def update(self):
-        """Update the window surface."""
+        """Update the window surface. to be called at each end of the main
+        file's loop."""
+        # entire display update. pass surface or rect for area update only
         pg.display.update()
-        # pg.display.flip()
+        # pygame tick
         self.clock.tick(self.fps)
+        # fill with background color
         self.screen.fill(self.background)
     def draw(self, obj, pos=None):
-        """Draw onto the window."""
+        """Draw onto the window. obj can be an gui element, pg.Surface, dict or
+        list. it will be converted into a iterable list and draw each of them
+        to the screen."""
+        # new list to fetch all the objects from obj
         elements = []
-
+        # if obj is a gui element
         if isMasterClass(obj, Surface):
+            # append this element to elements[]
             elements.append(obj)
+        # if obj is a dictionary
         elif obj.__class__ is dict:
+            # walk every single object in obj{}
             for each in obj:
-                if obj[each].__class__ is Surface or isMasterClass(obj[each], Surface):
-                    elements.append(obj[each])
-
+                # shortcut
+                e = obj[each]
+                # if obj is a gui element
+                if e.__class__ is Surface or isMasterClass(e, Surface):
+                    # append this element to elements[]
+                    elements.append(e)
+        # elements[] now owns every object from obj and is ready to walk trough
         for each in elements:
-            #each.update()# needed to pre-draw surfaces
+            # if there are no given position tuples
             if not pos:
+                # set the gui elemenets nested position coordinates
                 position = each.position
+            # if position argument is given
             else:
+                # set the given tuple
                 position = pos
+            # draw this turn's element to the screen
             self.screen.blit(each, position)
     def getEvents(self, elements={}):
         """Return a dict of window driven events."""
+        # for each pygame event
         for event in [pg.event.wait()] + pg.event.get():
-            # closed window
-            if event.type is pg.QUIT or (event.type is pg.KEYDOWN and event.key == pg.K_ESCAPE):
+            # clicked window close button
+            if event.type is pg.QUIT:
+                # call the close method
                 self.close()
-            # window resized
+            # pressed ESC key
+            elif (event.type is pg.KEYDOWN and event.key is pg.K_ESCAPE):
+                # call the close method
+                self.close()
+            # resized window
             if event.type is pg.VIDEORESIZE:
+                # call window's resize method
                 self.resize(event.size)
+                # set window's resize-event to tuple
                 self.events["resize"] = event.size
+            # exception made if window hasn't been resized
             else:
+                # set window's resize-event to none
                 self.events["resize"] = None
             # clicked
             if event.type is pg.MOUSEBUTTONDOWN:
-                # clicked left
+                # if button is left mouse button
                 if event.button is 1:
+                    # set window's click-event to mouse positional coordinates
                     self.events["click"] = pg.mouse.get_pos()
+                    # set window's mousedownleft-event to true
                     self.events["mousedownleft"] = True
-            # released
+            # released button
             if event.type is pg.MOUSEBUTTONUP:
-                # released left
+                # if button is left mouse button
                 if event.button is 1:
+                    # set window's click-event to none
                     self.events["click"] = None
+                    # set window's mousedownleft-event to false
                     self.events["mousedownleft"] = False
             # moving the mouse
             if event.type is pg.MOUSEMOTION:
+                # set window's move-event to mouse positional coordinates
                 self.events["move"] = pg.mouse.get_pos()
+            # exception made if mouse hasn't moved
             else:
+                # set window's move-event to none
                 self.events["move"] = None
-
-            # elements events
+            # for each gui elements in elements{}
             for each in elements:
+                # shortcut
                 elem = elements[each]
-                # update events
+                # check if there are events in the elemenet's scope
                 elem.getEvents(self.events)
-                # if anchor: change position on resize
+                # if window is getting resized
                 if event.type is pg.VIDEORESIZE:
+                    # if element has an anchor
                     if elem.anchors:
-                        elem.reposition(elem.calcPosition())
-                    if elem.size[0].__class__ is str or elem.size[1].__class__ is str:
+                        # calculate element's new position
+                        position = elem.calcPosition()
+                        # call the elements's reposition() function
+                        elem.reposition(position)
+                    # shortcut
+                    width = elem.size[0].__class__
+                    # shortcut
+                    height = elem.size[1].__class__
+                    # if size() as a string value
+                    if width is str or height is str:
+                        # call element's resize method with it's size() as arg
                         elem.resize(elem.size)
-                        #print(elem.width, elem.height)
+                    # call element's update method. IMPORTANT
                     elem.update()
-
+        # return new created events{} dict
         return self.events
     def close(self):
         """Close the window and shut down pygame."""
+        #import sys module for quick execution
         import sys
+        # exit pygame
         pg.quit()
+        # close window and delete process
         sys.exit()
     def resize(self, size):
         """Resizing element."""
