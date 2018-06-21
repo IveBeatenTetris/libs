@@ -8,7 +8,7 @@ from .helpers import(
 pg.font.init()
 
 # default colors
-colors = {
+COLORS = {
     "white": (255 , 255 , 255),
     "black": (0 , 0 , 0),
     "red": (255 , 0 , 0),
@@ -16,14 +16,14 @@ colors = {
     "blue": (0 , 0 , 255)
     }
 # gui defaults
-defaults = {
+DEFAULTS = {
     "all": {
         "position": (0, 0),
         "size": (0, 0),
         "text": "My Text",
         "font": "arial",
         "font-size": 16,
-        "font-color": colors["black"]
+        "font-color": COLORS["black"]
         },
     "window": {
         "caption": "new window",
@@ -81,13 +81,13 @@ defaults = {
 
         "text": "New Text",
         "font": "arial",
-        "font-color": colors["black"],
+        "font-color": COLORS["black"],
         "font-size": 16
         },
     "simple-text": {
         "text": "New Text",
         "font": "arial",
-        "font-color": colors["black"],
+        "font-color": COLORS["black"],
         "font-size": 16,
         "background": None
         }
@@ -98,7 +98,7 @@ class Window(object):
     def __init__(self, config={}, type="window"):
         """Constructor."""
         # validate the dict that has been declared self.config
-        self.config = validateDict(config, defaults["window"])
+        self.config = validateDict(config, DEFAULTS["window"])
         # give it a non-namespace type for you
         self.type = type
         # TODO percentage size still has to be implemented
@@ -136,6 +136,8 @@ class Window(object):
             pg.display.set_mode(self.size, pg.RESIZABLE)
         else:
             pg.display.set_mode(self.size)
+        # set window's caption
+        pg.display.set_caption(self.caption)
         # fill it with background-color
         display = pg.display.get_surface()
         display.fill(self.background)
@@ -246,7 +248,7 @@ class Window(object):
                     width = elem.size[0].__class__
                     # shortcut
                     height = elem.size[1].__class__
-                    # if size() as a string value
+                    # if one value in size() is a string
                     if width is str or height is str:
                         # call element's resize method with it's size() as arg
                         elem.resize(elem.size)
@@ -264,32 +266,52 @@ class Window(object):
         sys.exit()
     def resize(self, size):
         """Resizing element."""
+        # sets a new size property. tuple can also include strings
         self.size = size
+        # recreate the window object
         self.screen = self.__createWindow()
+        # recreates window's inner anchor points for sub elements
         self.anchorpoints = getAnchors(self.size)
 class Surface(pg.Surface):
     """Surface template class for gui elements."""
     def __init__(self, config={}, type="surface", parent=None):
         """Constructor."""
+        # set type's default config dependig on it's given 'type' argument
         if self.__class__ is Surface:
-            default = defaults["surface"]
+            default = DEFAULTS["surface"]
         elif self.__class__ is Panel:
-            default = defaults["panel"]
+            default = DEFAULTS["panel"]
         elif self.__class__ is Text:
-            default = defaults["text"]
+            default = DEFAULTS["text"]
         elif self.__class__ is Grid:
-            default = defaults["grid"]
+            default = DEFAULTS["grid"]
+        # validate config{} by default{}
         self.config = validateDict(config, default)
+        # if parent object is given
         if parent:
+            # overtake the object
             self.parent = parent
+        # exception on none given parent
         else:
+            # make the pygame window surface a parent
             self.parent = pg.display.get_surface()
+        # give it a non-namespace type for you
         self.type = type
+        # otional title text for the gui element
         self.caption = self.config["caption"]
+        # set self's size property
         self.size = self.config["size"]
-        if self.size[0].__class__ is str or self.size[1].__class__ is str:
-            s = getPercantage(self.parent.get_rect().size, self.size)
+        # shortcuts
+        width = self.size[0].__class__
+        height = self.size[1].__class__
+        parent_size = self.parent.get_rect().size
+        # if self's size() property has a string value
+        if width is str or height is str:
+            # check percantage in self's size() and calculate a new one
+            s = getPercantage(parent_size, self.size)
+        # except on integers as values in self's size()
         else:
+            # s is now a tuple of two integers
             s = self.size
         self.width, self.height = s
         self.position = self.config["position"]
@@ -342,13 +364,13 @@ class Surface(pg.Surface):
         if self.caption:
             cfg = {}
             cfg["text"] = self.caption
-            cfg["font-color"] = colors["white"]
+            cfg["font-color"] = COLORS["white"]
             cfg["font-size"] = 14
             cfg["anchors"] = ("center", 4)
+            # TODO optimize caption positioning
             c = Text(cfg, parent=self)
             #c = SimpleText(cfg, parent=self)
             self.blit(c, (c.x, c.y))
-            #self.blit(c, (0, 0))
 
         #self.update()
     def __createBackground(self):
@@ -473,8 +495,6 @@ class Panel(Surface):
     def __init__(self, config={}, type="panel"):
         """Constructor."""
         super().__init__(config, type)
-        # Surface.__init__(self, config=config, type=type)
-        #print(self.config)
 class Text(Surface):
     """Create a new gui text."""
     def __init__(self, config={}, type="text", parent=None):
@@ -483,14 +503,14 @@ class Text(Surface):
         try:
             text = config["text"]
         except KeyError:
-            text = defaults["text"]["text"]
+            text = DEFAULTS["text"]["text"]
         # font-size
         try:
             font_size = config["font-size"]
         except KeyError:
-            font_size = defaults["text"]["font-size"]
+            font_size = DEFAULTS["text"]["font-size"]
         font = pg.font.SysFont("arial", 12, True, False)
-        text = font.render(text, True, colors["white"])
+        text = font.render(text, True, COLORS["white"])
 
         config["size"] = text.get_rect().size
         #config["background"] = colors["white"]
@@ -502,7 +522,7 @@ class SimpleText(pg.Surface):
     """Create a new gui text."""
     def __init__(self, config={}, parent=None):
         """Constructor."""
-        self.config = validateDict(config, defaults["simple-text"])
+        self.config = validateDict(config, DEFAULTS["simple-text"])
         self.text = self.config["text"]
         self.font = self.config["font"]
         self.fontSize = self.config["font-size"]
