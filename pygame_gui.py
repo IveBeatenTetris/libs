@@ -297,26 +297,20 @@ class Surface(pg.Surface):
             self.parent = pg.display.get_surface()
         # give it a non-namespace type for you
         self.type = type
-        # otional title text for the gui element
+        # otional title for the gui element
         self.caption = self.config["caption"]
-        # set self's size property
+        # set self's size property. tuple can hold strings and integers
         self.size = self.config["size"]
-        # shortcuts
-        width = self.size[0].__class__
-        height = self.size[1].__class__
-        parent_size = self.parent.get_rect().size
-        # if self's size() property has a string value
-        if width is str or height is str:
-            # check percantage in self's size() and calculate a new one
-            s = getPercantage(parent_size, self.size)
-        # except on integers as values in self's size()
-        else:
-            # s is now a tuple of two integers
-            s = self.size
-        self.width, self.height = s
+        # calculate width and height out of already given size() property
+        self.width, self.height = self.calcSize()
+        # position property. tuple must hold integers
         self.position = self.config["position"]
+        # x and y are used for calculating position of this gui element
         self.x = self.position[0]
         self.y = self.position[1]
+        # anchors are the actual positioners. they can hold strings of
+        # positional arguments, which are used to calculate the final position
+        # tuple. example: ("left", "top") or ("center", "middle")
         self.anchors = self.config["anchors"]
         self.anchorpoints = getAnchors((self.width, self.height))
         self.background = self.config["background"]
@@ -446,8 +440,25 @@ class Surface(pg.Surface):
         else:
             s = size
 
+        self.size = size
         self.width, self.height = s
         self.__built()
+    def calcSize(self):
+        """Calculate self's size and return a tuple of integers."""
+        # shortcuts
+        width = self.size[0].__class__
+        height = self.size[1].__class__
+        parent_size = self.parent.get_rect().size
+        # if self's size() property has a string value
+        if width is str or height is str:
+            # check percantage in self's size() and calculate a new one
+            s = getPercantage(parent_size, self.size)
+        # except on integers as values in self's size()
+        else:
+            # s is now a tuple of two integers
+            s = self.size
+
+        return s
 class Grid(Surface):
     """Surface template class for gui elements."""
     def __init__(self, config={}, type="grid", parent=None):
