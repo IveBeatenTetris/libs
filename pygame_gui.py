@@ -1,12 +1,14 @@
+# shortcut
 import pygame as pg
+# import only what you need
 from .helpers import(
     isMasterClass,
     getAnchors,
     convertAnchor,
     getPercantage,
     validateDict)
+# initialiaze the pygame font module
 pg.font.init()
-
 # default colors
 COLORS = {
     "white": (255 , 255 , 255),
