@@ -119,12 +119,12 @@ class Window(object):
         self.fps = self.config["fps"]
         # create the pygame surface for window as a property
         self.screen = self.__createWindow()
-        # predefined events. they will be updated with each window check
+        # predefined events. they will be updated with each window tick
         self.events = {
-            "resize": None,# tuple / none
-            "move": None,# tuple / none
-            "click": None,# tuple / none
-            "mousedownleft": False# bool
+            "resize": None,
+            "move": None,
+            "click": None,
+            "mousedownleft": False
             }
     def __createWindow(self):# pygame display
         """Create main window element and return it. background is going to be
@@ -312,23 +312,37 @@ class Surface(pg.Surface):
         # positional arguments, which are used to calculate the final position
         # tuple. example: ("left", "top") or ("center", "middle")
         self.anchors = self.config["anchors"]
+        # anchor points of this gui element (left, top, bottomright and so on)
         self.anchorpoints = getAnchors((self.width, self.height))
+        # TODO background is still only a color. images have to be implemented
+        # self's background color in a tuple (int, int, int)
         self.background = self.config["background"]
+        # True or False
         self.resizable = self.config["resizable"]
+        # decide if gui element is rather dragable or not
         self.dragable = self.config["dragable"]
+        # specify a dragable area rect like a title bar for a window
         if "drag-area" in self.config:
-            if self.config["drag-area"].__class__ is pg.Rect:
+            # shortcut
+            dac = self.config["drag-area"].__class__
+            # when dac is a pygame rect
+            if dac is pg.Rect:
+                # set self's dragable area to dac (pygame rect)
                 self.dragarea = self.config["drag-area"]
-            elif self.config["drag-area"].__class__ is tuple:
+            # except dac is a tuple
+            elif dac is tuple:
+                # set self's dragable area to a new pygame rect
                 self.dragarea = pg.Rect(self.config["drag-area"])
+            # if dac is unknown or not given
             else:
+                # set self's dragable area to none and disable it that way
                 self.dragarea = None
-        else:
-            self.dragarea = None
-
+        # create the actual gui element out of the config properties
         self.__built()
+        # if it's position has a string (100, "bottom") then reposition the
+        # element by calculating it's new position
         self.reposition(self.calcPosition())
-
+        # predefined events. they will be updated with each window tick
         self.events = {
             "hover": None,
             "click": False,
@@ -342,28 +356,38 @@ class Surface(pg.Surface):
         return '<Surface({}, {})>'.format((self.x, self.y), self.size)
     def __built(self):
         """Throw everything together."""
+        # if there is no given background for the gui element
         if self.background is None:
+            # create itself as a pygame surface with transparent background
             pg.Surface.__init__(self, (self.width, self.height), pg.SRCALPHA)
         else:
+            # create itself as a regular pygame surface
             pg.Surface.__init__(self, (self.width, self.height))
+        # gets it's pygame rect
         self.rect = self.get_rect()
+        # positioning the rect
         self.rect.x = self.x
         self.rect.y = self.y
-        # background
+        # create and set a background is one is given
         self.__createBackground()
-        # dragging bar
+        # if dragarea is enabled
         if self.dragarea:
+            # TODO dragarea is still static in vision
+            # draw a simple shape from coords of self.dragarea
             pg.draw.rect(self, (30, 50, 70), self.dragarea)
-        # caption
+        # when is caption title is given
         if self.caption:
+            # create a dict to put in all configs and create a text element
             cfg = {}
             cfg["text"] = self.caption
             cfg["font-color"] = COLORS["white"]
             cfg["font-size"] = 14
             cfg["anchors"] = ("center", 4)
             # TODO optimize caption positioning
+            # create a text element by giving it the new cfg{} as config
             c = Text(cfg, parent=self)
             #c = SimpleText(cfg, parent=self)
+            # draw the text to gui element
             self.blit(c, (c.x, c.y))
 
         #self.update()
